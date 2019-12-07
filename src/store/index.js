@@ -5,9 +5,17 @@ Vue.use(Vuex)
 
 export default new Vuex.Store({
   state: {
-    answers: []
+    task: {},
+    answers: [],
+    submmitted: false
   },
   mutations: {
+    setTask(state, payload) {
+      state.task = payload;
+    },
+    setSubmmitted(state, payload) {
+      state.submmitted = payload;
+    },
     selAnswer(state, payload) {
       let isDummy = true;
       for(const [index, answer] of state.answers.entries()) {
@@ -21,6 +29,10 @@ export default new Vuex.Store({
       if(isDummy) {
         state.answers.push(payload);
       }
-    }
+      state.answers.sort((a, b) => {
+        return a.questionId < b.questionId ? -1 : a.questionId > b.questionId ? 1: 0;
+      });
+    },
+
   },
 })

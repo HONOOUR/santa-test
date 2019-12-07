@@ -21,5 +21,8 @@ module.exports = {
     "no-console": "off",
     "vue/attribute-hyphenation": "off",
     "vue/html-self-closing": "off",
+    "no-unused-vars": "off",
+    "no-empty": "off",
+    "no-unreachable": "off"
   }
 }
