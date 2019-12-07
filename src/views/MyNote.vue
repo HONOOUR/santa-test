@@ -10,7 +10,7 @@
     </v-tabs>
 
     <v-tabs-items v-model="tabs">
-      <v-tab-item v-if="!submmitted">
+      <v-tab-item v-if="!answers.length">
         아직 푼 문제가 없습니다.
       </v-tab-item>
       <v-tab-item v-else>
@@ -33,31 +33,28 @@
       }
     },
     computed: {
-      task() {
-        return this.$store.state.task;
+      questions() {
+        return this.$store.state.questions;
       },
       answers() {
         return this.$store.state.answers;
       },
-      submmitted() {
-        return this.$store.state.submmitted;
-      }
     },
     created() {
-      if(this.submmitted) {
+      if(this.answers) {
         this.compareAnswer();
-        this.solved = true;
       }
     },
     methods: {
       compareAnswer() {
-        for(const [index, question] of this.task.questions.entries()) {
+        for(const [index, question] of this.questions.entries()) {
           if(this.answers[index].answer === question.correct_answer) {
             this.result.push({})
           } else {
             
           }
         }
+        console.log(this.result)
       }
     }
   }

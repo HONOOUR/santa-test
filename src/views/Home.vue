@@ -7,7 +7,7 @@
       v-model="length"
       readonly
       inverse-label
-      color="grey darken-3"
+      :color="primaryColor"
       min="1"
       :max="max"
       :label="length + '/' + max"
@@ -22,14 +22,14 @@
     </v-card>
 
     <!-- Solve -->
-    <v-card class="mt-3">
+    <v-card class="mt-4">
       <!-- Tabs -->
       <v-tabs v-model="tabs">
         <v-tab v-for="(question, tabQuestionIndex) in task.questions" :key="tabQuestionIndex">
-          {{ "Q" + (tabQuestionIndex + 1) }}
+          {{ "Qestion " + (tabQuestionIndex + 1) }}
         </v-tab>
         <v-spacer></v-spacer>
-        <v-switch v-model="isAutoNext" label="문제 넘어가기"></v-switch>
+        <v-switch v-model="isAutoNext" label="문제 자동넘김"></v-switch>
       </v-tabs>
 
       <!-- Tab Items -->
@@ -38,7 +38,7 @@
           <v-list>
             <v-list-item
               v-for="(answer, answerIndex) in question.view_tree.children[2].children" :key="answerIndex"
-              :class="isActiveArr[tabs][answerIndex] && white"
+              :class="isActiveArr[tabs][answerIndex] && activeColor"
               @click="selAnswer(answer.children[0].children[0].chunk_id, answerIndex)"
             >
               <v-list-item-avatar
@@ -58,27 +58,21 @@
     <!-- Bottom Appbar -->
     <v-app-bar
       bottom 
-      color="grey darken-3"
+      :color="primaryColor"
     >
-      <v-btn
-        text
-        height="100%"
-        class="white--text"
-      >
-        본문 단어 힌트
-      </v-btn>
       <v-spacer></v-spacer>
       <v-btn
         text
         height="100%"
-        class="white--text"
+        color="white"
       >
         단어 힌트
       </v-btn>      
       <v-btn
         text
         height="100%"
-        class="white--text"
+        color="white"
+        @click="onClickSolved"
       >
         채점하기
       </v-btn>
@@ -89,13 +83,16 @@
       v-model="dialog"
       width="500"
     >
-      <v-card>
-        <v-card-title>
+      <v-card :color="dialogColor">
+        <v-card-title class="white--text">
           답변 제출
         </v-card-title>
-        <v-card-text class="pb-0">
+        <v-card-text class="pb-0 white--text">
+          선택한 답변
           <div v-for="(answer, index) in answers" :key="index">
-            Q{{ index + 1 }} {{ answer.content }}
+            <div v->
+              Q{{ index + 1 }} {{ answer.content }}
+            </div>
           </div>
           <v-divider></v-divider>
         </v-card-text>
@@ -103,14 +100,13 @@
           <v-spacer></v-spacer>
           <v-btn
             outlined
-            color="secondary"
             @click="goEditAnswer"
           >
             수정
           </v-btn>          
           <v-btn
             outlined
-            color="primary"
+            color="white"
             @click="submitAnswer"
           >
             제출
@@ -133,7 +129,9 @@
         underscoreArr: [],
         answers: [],
         isActiveArr: [],
-        white: 'purple',
+        primaryColor: 'grey darken-3',
+        dialogColor: 'grey darken-2',
+        activeColor: 'grey darken-1',
         isAutoNext: false
       }
     },
@@ -157,47 +155,51 @@
       },
     },
     created() {
-      this.fetchData();
+      this.init();
     },
     methods: {
-      // Initialize
-      async fetchData() {
+      async init() {
+        // Fetch Data
         const { data } = await this.$axios.get('/task_container.json');
         this.task = data;
 
-        for(const [index1, question] of this.task.questions.entries()) {
-          this.isActiveArr.push([])
-          this.underscoreArr.push('_______');
+        // 정답 스토어에 저장
+        this.$store.commit('setQuestion', data.questions);
+
+        let replacedText = this.task.preview;
+        for(const [index, question] of this.task.questions.entries()) {
+          // 답변 초기 작업
+          this.answers.push([]);
+          // 본문 내용 ___(n)___ 형태로 수정
+          let initialData = `___(${index+1})___`;
+          this.underscoreArr.push(initialData);
+          replacedText = replacedText.replace("_______", this.underscoreArr[index]);
+
+          // 선택한 답변 활성화를 위한 2차원 배열 생성
+          this.isActiveArr.push([]);
           for(let i=0; i <question.view_tree.children[2].children.length; i++) {
-            this.isActiveArr[index1].push(false);
+            this.isActiveArr[index].push(false);
           }
         }
-      },
+        this.task.preview = replacedText;
+      },      
       // Answer 선택 시
-      selAnswer(chunkId, answerIndex) {
+      selAnswer(chunkId, index) {
         // 자신이 선택한 값 ex) both
         let content = this.chunckMap[chunkId].text_en;
-        // Question의 _____을 선택한 값으로 바꿈.
+        // Question의 ___(n)___ 혹은 이미 답이 기입된 "both"를 선택한 값으로 바꿈.
+        this.task.preview = this.task.preview.replace(this.underscoreArr[this.tabs], content);
+        this.underscoreArr[this.tabs] = content;
 
-
-        for(const item of this.underscoreArr) {
-          let replacedText = this.task.preview.replace(this.underscoreArr[this.tabs], `"${content}"`);
-          this.task.preview = replacedText;
-          this.underscoreArr[this.tabs] = `"${content}"`;
-        }
-        let replacedText = this.task.preview.replace(this.underscoreArr[this.tabs], `"${content}"`);
-        this.task.preview = replacedText;
-        this.underscoreArr[this.tabs] = `"${content}"`;
-        return;
         // 선택한 답변 답안 목록에 추가.
         this.answers[this.tabs] = {
-          answer: String.fromCharCode(answerIndex + 97),
+          answer: String.fromCharCode(index + 97),
           questionId: this.tabs + 1,
           answerId: chunkId,
           content
-        }
-        
-        // 정렬
+        };
+
+        // 선택한 답변 정렬
         this.answers.sort((a, b) => {
           return a.questionId < b.questionId ? -1 : a.questionId > b.questionId ? 1: 0;
         });
@@ -207,16 +209,20 @@
             this.isActiveArr[this.tabs][index] = false;
           }
         });
-        this.isActiveArr[this.tabs][answerIndex] = true;
+        this.isActiveArr[this.tabs][index] = true;
 
         // 문제 자동 넘어가기
-        if(this.isAutoNext) {
+        if(this.isAutoNext && !(this.tabs===this.max-1)) {
           this.tabs++;
         }
-       },
+      },
+      // 채점하기 클릭 시
+      onClickSolved() {
+        this.dialog = true;
+      },
       // Answers 제출 선택
       submitAnswer() {
-        // this.$store.commit('setSubmmitted', true);
+        this.$store.commit('submitAnswer', this.answers);
         this.$router.push({ path: '/my-note' });
       },
       // Answer 수정 선택

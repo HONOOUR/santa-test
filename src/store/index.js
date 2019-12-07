@@ -5,34 +5,19 @@ Vue.use(Vuex)
 
 export default new Vuex.Store({
   state: {
-    task: {},
+    // task: {},
     answers: [],
-    submmitted: false
+    questions: []
   },
   mutations: {
-    setTask(state, payload) {
-      state.task = payload;
+    // setTask(state, payload) {
+    //   state.task = payload;
+    // },
+    setQuestion(state, payload) {
+      state.questions = payload;
     },
-    setSubmmitted(state, payload) {
-      state.submmitted = payload;
+    submitAnswer(state, payload) {
+      state.answers = payload;
     },
-    selAnswer(state, payload) {
-      let isDummy = true;
-      for(const [index, answer] of state.answers.entries()) {
-        if(answer.questionId === payload.questionId) {
-          state.answers.splice(index, 1);
-          state.answers.push(payload);
-          isDummy = false;
-          break;
-        }
-      }
-      if(isDummy) {
-        state.answers.push(payload);
-      }
-      state.answers.sort((a, b) => {
-        return a.questionId < b.questionId ? -1 : a.questionId > b.questionId ? 1: 0;
-      });
-    },
-
   },
 })

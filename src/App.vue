@@ -52,7 +52,9 @@
         tile
         color="grey darken-4"
       >
-        <v-card-title class="white--text text-center">
+        <v-card-title
+          class="white--text text-center"
+        >
           <v-container>
             SANTA TOEIC
           </v-container>
@@ -63,12 +65,23 @@
         style="overflow: hidden"
       >
         <v-list-item-group color="white">
-          <v-list-item v-for="(menu, i) in menus" :key="i" @click="navigateTo(menu.path)">
+          <v-list-item 
+            v-for="(menu, i) in menus" :key="i"
+            @click="navigateTo(menu.path)"
+          >
             <v-list-item-icon>
-              <v-icon color="white" v-text="menu.icon"></v-icon>
+              <v-icon
+                color="white"
+                v-text="menu.icon"
+              >
+              </v-icon>
             </v-list-item-icon>
             <v-list-item-content>
-              <v-list-item-title class="white--text" v-text="menu.text"></v-list-item-title>
+              <v-list-item-title
+                class="white--text"
+                v-text="menu.text"
+              >
+              </v-list-item-title>
             </v-list-item-content>
           </v-list-item>
         </v-list-item-group>
